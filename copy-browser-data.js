@@ -169,7 +169,7 @@ function updateJSON() {
         
     }
     
-    //writeJSON();
+    writeJSON();
     
 }
 
@@ -190,10 +190,4 @@ function writeJSON() {
 }
 
 readJSON();
-
-
-
-
-
-
 
