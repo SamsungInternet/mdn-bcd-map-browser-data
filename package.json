@@ -1,0 +1,22 @@
+{
+  "name": "mdn-browser-compat-data-update-tools",
+  "version": "1.0.0",
+  "description": "MDN Browser Compat Data Update Tools",
+  "main": "copy-browser-data.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/poshaughnessy/mdn-browser-compat-data-update-tools.git"
+  },
+  "author": "Peter O'Shaughnessy <peter.oshaughnessy@gmail.com> (https://peteroshaughnessy.com)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/poshaughnessy/mdn-browser-compat-data-update-tools/issues"
+  },
+  "homepage": "https://github.com/poshaughnessy/mdn-browser-compat-data-update-tools#readme",
+  "dependencies": {
+    "jsel": "^1.1.6"
+  }
+}
