@@ -169,61 +169,9 @@ function updateJSON() {
         
     }
     
-    /*
-    const supportObjs = searchJSON(json, [], 5); // 5 = maxDepth
-
-    console.log('supportObjs length', supportObjs.length);
-    console.log('support objs are', supportObjs);
-
-    if (supportObjs) {
-
-        for (let i=0; i < supportObjs.length; i++) {
-
-            const supportObj = supportObjs[i];
-            
-            const supportDestNode = supportObj[destBrowserId];
-        
-            if (supportDestNode) {
-                console.log('Samsung Internet node already exists', supportDestNode);
-            } else {
-                console.log('TODO add Samsung Internet');
-            }
-        }
-        
-    }
-    */
-
     //writeJSON();
     
 }
-
-/*
-function searchJSON(obj, found, depth) {
-
-    const keys = Object.keys(obj);
-
-    //console.log('keys, depth', keys, depth);
-    //console.log('keys[\'__compat\']', keys['__compat']);
-    
-    if (obj['__compat']) {
-        //console.log('Found', obj['__compat'].support);
-        found.push(obj['__compat'].support);
-    }
-
-    if (depth-- > 0) {
-        for (let i=0; i<keys.length; i++) {
-
-            const childObj = obj[keys[i]];
-            
-            searchJSON(childObj, found, depth);
-        }
-        return 
-    }
-
-    return found;
-}
-*/
-   
 
 function writeJSON() {
 
