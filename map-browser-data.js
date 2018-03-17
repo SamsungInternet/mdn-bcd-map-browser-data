@@ -7,10 +7,24 @@ const fs = require('fs');
 const path = require('path');
 const jsel = require('jsel');
 const glob = require('glob');
+const debug = require('debug')('map-browser-data');
+const colors = require('colors/safe');
+
+colors.setTheme({
+    info: 'green',
+    data: 'grey',
+    warn: 'yellow',
+    error: 'red'
+});
+
+if (process.argv.length < 3) {
+    console.error(colors.error('Usage: [path]. Please provide a directory of BCD JSON files'));
+    process.exit(9)
+}
 
 const inputFilePath = process.argv[2];
 
-console.log('Using directory', inputFilePath);
+debug('Using directory', inputFilePath);
 
 const sourceBrowserId = 'chrome_android';
 const destBrowserId = 'samsunginternet_android';
@@ -84,8 +98,6 @@ const browserVersionMapping = {
 
 function readJSON() {
 
-    console.log('Read files from', path.join(inputFilePath, '**/*.json'));
-
     glob(path.join(inputFilePath, '**/*.json'), null, (error, files) => {
 
         if (error) {
@@ -94,7 +106,7 @@ function readJSON() {
 
         for (const file of files) {
 
-            console.log('Read file', file);
+            debug('Read file', file);
             
             fs.readFile(file, 'utf8', function(error, data) {
 
@@ -115,8 +127,6 @@ function readJSON() {
 
 function updateJSON(file, data) {
 
-    console.log('Update JSON');
-    
     const json = JSON.parse(data);
     const dom = jsel(json);
     
@@ -129,72 +139,85 @@ function updateJSON(file, data) {
     
     const supportNodes = dom.selectAll('//__compat/support');
 
-    console.log('supportNodes', supportNodes.length);
+    debug('supportNodes', supportNodes.length);
 
-    for (supportNode of supportNodes) {
+    if (supportNodes.length) {
 
-        const sourceSupportNode = supportNode[sourceBrowserId];
-        const destSupportNode = supportNode[destBrowserId];
+        console.log('Parsing', file);
         
-        if (sourceSupportNode) {
+        for (supportNode of supportNodes) {
 
-            // Source browser exists but not dest browser
-            const sourceVersion = sourceSupportNode['version_added'];
+            const sourceSupportNode = supportNode[sourceBrowserId];
+            const destSupportNode = supportNode[destBrowserId];
+        
+            if (sourceSupportNode) {
 
-            const mappedVersion = browserVersionMapping[sourceVersion];
+                // Source browser exists but not dest browser
+                const sourceVersion = sourceSupportNode['version_added'];
 
-            if (!destSupportNode || !destSupportNode['version_added']) {
+                const mappedVersion = browserVersionMapping[sourceVersion];
 
-                // Not going to overwrite existing data
+                if (!destSupportNode || !destSupportNode['version_added']) {
 
-                if (sourceVersion === true ||
-                    sourceVersion === false ||
-                    sourceVersion === null ) {
+                    // Not going to overwrite existing data
 
-                    // No version data. Presume true for Chrome is 'true'
-                    // for Samsung Internet, false is false, null is null...
-                    // Because it's likely to be older stuff.
-                    // But we should make a note and check.
+                    if (sourceVersion === true ||
+                        sourceVersion === false ||
+                        sourceVersion === null ) {
+                        
+                        // No version data. Presume true for Chrome is 'true'
+                        // for Samsung Internet, false is false, null is null...
+                        // Because it's likely to be older stuff.
+                        // But we should make a note and check.
 
-                    console.log('Copying source version value:', sourceVersion);
+                        console.log(colors.data(`- Copying source version: '${sourceVersion}'`));
                     
-                    supportNode[destBrowserId] = {
-                        "version_added": sourceVersion
-                    };
+                        supportNode[destBrowserId] = {
+                            'version_added': sourceVersion
+                        };
 
-                } else if(mappedVersion) {
+                    } else if(mappedVersion) {
                 
-                    console.log(`Mapped source ${sourceVersion} to ${mappedVersion}`);
+                        console.log(colors.data(`- Mapped source ${sourceVersion} to ${mappedVersion}`));
                     
-                    supportNode[destBrowserId] = {
-                        "version_added": mappedVersion
-                    };
+                        supportNode[destBrowserId] = {
+                            'version_added': mappedVersion
+                        };
 
 
-                } else {
-                    console.warn('Unrecognised source version', sourceVersion);
+                    // XXX hardcoded    
+                    } else if (sourceVersion > 59) {
+
+                        console.log(colors.data(`- Source version ${sourceVersion} too new, presume false`));
+
+                        supportNode[destBrowserId] = {
+                            'version_added': false
+                        };
+                        
+                    } else {
+                        console.warn(colors.warn(`Unrecognised source version ${sourceVersion}`));
+                    }
+                
                 }
-                
+
             }
-            
+
         }
         
     }
-    
+        
     writeJSON(json, file);
     
 }
 
 function writeJSON(json, file) {
 
-    console.log('Write file');
-    
     fs.writeFile(file, JSON.stringify(json, null, 2) + '\n', (error) => {
 
         if (error) {
-            console.error('Error writing to file', file);
+            console.error(colors.error('Error writing to file %s'), file);
         } else {
-            console.log('Saved', file);
+            debug('Saved', file);
         }
         
     });
