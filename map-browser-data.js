@@ -5,7 +5,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const jsel = require('jsel');
+const traverse = require('traverse');
 const glob = require('glob');
 const debug = require('debug')('map-browser-data');
 const colors = require('colors/safe');
@@ -42,7 +42,7 @@ const browserVersionMapping = new Map([
 
 function readJSON() {
 
-    glob(path.join(inputFilePath, '**/*.json'), null, (error, files) => {
+    glob(path.join(inputFilePath, '**/*.json'), {ignore: 'node_modules'}, (error, files) => {
 
         if (error) {
             throw error;
@@ -52,16 +52,10 @@ function readJSON() {
 
             debug('Read file', file);
             
-            fs.readFile(file, 'utf8', function(error, data) {
+            const data = fs.readFileSync(file, 'utf8');
 
-                if (error) {
-                    throw error;
-                }
-
-                updateJSON(file, data);
+            updateJSON(file, data);
                 
-            });
-            
         }
         
 
@@ -72,7 +66,6 @@ function readJSON() {
 function updateJSON(file, data) {
 
     const json = JSON.parse(data);
-    const dom = jsel(json);
     let hasUpdates = false;
     
     // Examples of where the data might be:
@@ -81,8 +74,17 @@ function updateJSON(file, data) {
     // .http.[feature_name].__compat.support.[browser_name]
     // .javascript.classes.__compat.support.[browser_name]
     // .javascript.classes.[feature_name].__compat.support.[browser_name]
-    
-    const supportNodes = dom.selectAll('//__compat/support');
+
+    const supportNodes = traverse(json).reduce(function(acc, node) {
+
+        if (!this.key || !this.parent.key) return acc;
+
+        if (this.key == 'support' && this.parent.key == '__compat') {
+            acc.push(this.node);
+        }
+        return acc;
+
+    }, []);
 
     debug('supportNodes', supportNodes.length);
 
@@ -118,7 +120,7 @@ function updateJSON(file, data) {
                         'version_added': mappedVersion
                     };
 
-                    hasChanges = true;
+                    hasUpdates = true;
                 }
 
             }
@@ -127,7 +129,7 @@ function updateJSON(file, data) {
         
     }
         
-    if (hasChanges) {
+    if (hasUpdates) {
         writeJSON(json, file);
     }
     
@@ -135,16 +137,8 @@ function updateJSON(file, data) {
 
 function writeJSON(json, file) {
 
-    fs.writeFile(file, JSON.stringify(json, null, 2) + '\n', (error) => {
-
-        if (error) {
-            console.error(colors.error('Error writing to file %s'), file);
-        } else {
-            debug('Saved', file);
-        }
-        
-    });
-    
+    fs.writeFileSync(file, JSON.stringify(json, null, 2) + '\n');
+    console.log('writing ' + file);
 }
 
 readJSON();
