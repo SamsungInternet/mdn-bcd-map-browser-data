@@ -1,8 +1,8 @@
 {
-  "name": "mdn-browser-compat-data-update-tools",
+  "name": "mdn-bcd-map-browser-data",
   "version": "0.1.0",
   "description": "MDN Browser Compat Data Update Tools",
-  "main": "copy-browser-data.js",
+  "main": "map-browser-data.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

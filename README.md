@@ -1,17 +1,19 @@
 # MDN Browser Compat Data update tools
 
-Tools to hopefully make it easier for me to update [MDN browser-compat-data](https://github.com/mdn/browser-compat-data).
+Tools to hopefully make it easier to update [MDN browser-compat-data](https://github.com/mdn/browser-compat-data).
 
-## copy-browser-data
+## map-browser-data
 
 Usage:
 
 ```
-node copy-browser-data [path]
+npm install
+node map-browser-data [path]
 ```
 
-E.g.
+Examples
 
 ```
-node copy-browser-data .
+node map-browser-data .
+node map-browser-data ../bcd/javascript/
 ```
