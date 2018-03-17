@@ -73,6 +73,7 @@ function updateJSON(file, data) {
 
     const json = JSON.parse(data);
     const dom = jsel(json);
+    let hasUpdates = false;
     
     // Examples of where the data might be:
     // .html.elements.[element_name].__compat.support.[browser_name]
@@ -96,9 +97,11 @@ function updateJSON(file, data) {
         
             if (sourceSupportNode) {
 
-                // Source browser exists but not dest browser
                 const sourceVersion = sourceSupportNode['version_added'];
 
+                // Maps false to false and null to null.
+                // Otherwise, maps version using our mapping definition.
+                // If version mapping not found, default to false.
                 const mappedVersion = sourceVersion && (
                     Array.from(browserVersionMapping.entries())
                     .find(a => (sourceVersion >= a[0][0] && sourceVersion <= a[0][1]))
@@ -106,10 +109,16 @@ function updateJSON(file, data) {
                 )[1];
 
                 if (!destSupportNode || !destSupportNode['version_added']) {
+
+                    // Source browser exists but not dest browser
+
                     console.log(colors.data(`- Mapped source ${sourceVersion} to ${mappedVersion}`));
+
                     supportNode[destBrowserId] = {
                         'version_added': mappedVersion
                     };
+
+                    hasChanges = true;
                 }
 
             }
@@ -118,7 +127,9 @@ function updateJSON(file, data) {
         
     }
         
-    writeJSON(json, file);
+    if (hasChanges) {
+        writeJSON(json, file);
+    }
     
 }
 
