@@ -30,8 +30,7 @@ const sourceBrowserId = 'chrome_android';
 const destBrowserId = 'samsunginternet_android';
 
 /**
- * Maps the version on the left, to the version on the right.
- * TODO refactor with ranges to avoid repetition.
+ * Maps the version range on the left, to the version on the right.
  */
 const browserVersionMapping = new Map([
     [[57, 59], "7.0"],

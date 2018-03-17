@@ -1,5 +1,7 @@
 # MDN Browser Compat Data - tool for mapping browser data
 
+**Currently in progress and hardcoded for Samsung Internet use**
+
 A script to hopefully make it easier to update [MDN browser-compat-data](https://github.com/mdn/browser-compat-data).
 
 It uses a defined `source` browser and version mapping, to update the supported version data for another browser, where that data is currently missing.
@@ -24,4 +26,7 @@ node map-browser-data ../bcd/javascript/
 
 To debug, set the DEBUG environment variable with the namespace '':
 
+```
 DEBUG=map-browser-data node map-browser-data.js
+```
+
