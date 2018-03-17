@@ -26,6 +26,7 @@ const inputFilePath = process.argv[2];
 
 debug('Using directory', inputFilePath);
 
+const chromeDesktopBrowserId = 'chrome';
 const sourceBrowserId = 'chrome_android';
 const destBrowserId = 'samsunginternet_android';
 
@@ -99,6 +100,39 @@ function updateJSON(file, data) {
         
             if (sourceSupportNode) {
 
+                // Sometimes the browser support node contains an array
+                // Current example: api/AnimationEvent.json
+                // In this case, copy the array first...
+
+                if (Array.isArray(sourceSupportNode)) {
+
+                    console.log(colors.info('- Copying array of support data'));
+
+                    supportNode[destBrowserId] = sourceSupportNode.slice();
+
+                    for (const i=0; i < sourceSupportNode.length; i++) {
+                        mapSupport(sourceSupportNode[i], supportNode[destBrowserId][i]);
+                    }
+
+                } else {
+                    //mapSupport...
+                }
+
+            }
+
+        }
+        
+    }
+        
+    if (hasUpdates) {
+        writeJSON(json, file);
+    }
+    
+}
+
+// In progress - broken...
+function mapSupport(sourceSupportNode, destSupportNode) {
+
                 const sourceVersion = sourceSupportNode['version_added'];
 
                 // Maps false to false and null to null.
@@ -114,25 +148,31 @@ function updateJSON(file, data) {
                 // false or null, then continue...
                 if (!destSupportNode || !destSupportNode['version_added']) {
 
-                    console.log(colors.data(`- Mapped source ${sourceVersion} to ${mappedVersion}`));
+                    if (mappedVersion === null && 
+                        supportNode[chromeDesktopBrowserId]['version_added'] === false) {
 
-                    supportNode[destBrowserId] = {
-                        'version_added': mappedVersion
-                    };
+                        // If Chrome desktop version is false, if so,
+                        // we presume false too. (Erring on side of reducing nulls)
+                        
+                        console.log(colors.info('- Replacing null with false'));
+                        supportNode[destBrowserId] = {
+                            'version_added': false
+                        };                        
+                        
+                    } else {
+    
+                        console.log(colors.data(`- Mapped source ${sourceVersion} to ${mappedVersion}`));
 
+                        supportNode[destBrowserId] = {
+                            'version_added': mappedVersion
+                        };
+                                
+                    }
+    
                     hasUpdates = true;
                 }
 
-            }
 
-        }
-        
-    }
-        
-    if (hasUpdates) {
-        writeJSON(json, file);
-    }
-    
 }
 
 function writeJSON(json, file) {
