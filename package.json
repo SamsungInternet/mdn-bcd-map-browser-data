@@ -1,6 +1,6 @@
 {
   "name": "mdn-browser-compat-data-update-tools",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "MDN Browser Compat Data Update Tools",
   "main": "copy-browser-data.js",
   "scripts": {
@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/poshaughnessy/mdn-browser-compat-data-update-tools#readme",
   "dependencies": {
+    "glob": "^7.1.2",
     "jsel": "^1.1.6"
   }
 }

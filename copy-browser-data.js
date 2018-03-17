@@ -4,15 +4,13 @@
  * E.g. Map Chrome v59 to Samsung Internet v7.
  */
 const fs = require('fs');
+const path = require('path');
 const jsel = require('jsel');
+const glob = require('glob');
 
-// TODO extend to multiple files - starting with one
 const inputFilePath = process.argv[2];
 
-console.log('input filepath', inputFilePath);
-
-// TODO make it write back to the same file
-const outputFilePath = inputFilePath + '.tmp';
+console.log('Using directory', inputFilePath);
 
 const sourceBrowserId = 'chrome_android';
 const destBrowserId = 'samsunginternet_android';
@@ -84,30 +82,44 @@ const browserVersionMapping = {
     "1": "1.0"
 };
 
-let json;
-let dom;
-
 function readJSON() {
 
-    console.log('Read file');
+    console.log('Read files from', path.join(inputFilePath, '**/*.json'));
 
-    fs.readFile(inputFilePath, 'utf8', function(error, data) {
+    glob(path.join(inputFilePath, '**/*.json'), null, (error, files) => {
 
         if (error) {
             throw error;
         }
 
-        json = JSON.parse(data);
-        dom = jsel(json);
+        for (const file of files) {
 
-        updateJSON();
+            console.log('Read file', file);
+            
+            fs.readFile(file, 'utf8', function(error, data) {
+
+                if (error) {
+                    throw error;
+                }
+
+                updateJSON(file, data);
+                
+            });
+            
+        }
         
+
     });
-    
+
 }
 
-function updateJSON() {
+function updateJSON(file, data) {
 
+    console.log('Update JSON');
+    
+    const json = JSON.parse(data);
+    const dom = jsel(json);
+    
     // Examples of where the data might be:
     // .html.elements.[element_name].__compat.support.[browser_name]
     // .html.global_attributes.[attribute_name].__compat.support.[browser_name]
@@ -169,20 +181,20 @@ function updateJSON() {
         
     }
     
-    writeJSON();
+    writeJSON(json, file);
     
 }
 
-function writeJSON() {
+function writeJSON(json, file) {
 
     console.log('Write file');
     
-    fs.writeFile(outputFilePath, JSON.stringify(json, null, 2) + '\n', (error) => {
+    fs.writeFile(file, JSON.stringify(json, null, 2) + '\n', (error) => {
 
         if (error) {
-            console.error('Error writing to file', outputFilePath);
+            console.error('Error writing to file', file);
         } else {
-            console.log('Saved', outputFilePath);
+            console.log('Saved', file);
         }
         
     });
