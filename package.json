@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/poshaughnessy/mdn-bcd-map-browser-data.git"
+    "url": "git+https://github.com/samsunginternet/mdn-bcd-map-browser-data.git"
   },
   "author": "Peter O'Shaughnessy <peter.oshaughnessy@gmail.com> (https://peteroshaughnessy.com)",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/poshaughnessy/mdn-bcd-map-browser-data/issues"
+    "url": "https://github.com/samsunginternet/mdn-bcd-map-browser-data/issues"
   },
-  "homepage": "https://github.com/poshaughnessy/mdn-bcd-map-browser-data#readme",
+  "homepage": "https://github.com/samsunginternet/mdn-bcd-map-browser-data#readme",
   "dependencies": {
     "colors": "^1.2.1",
     "debug": "^3.1.0",
