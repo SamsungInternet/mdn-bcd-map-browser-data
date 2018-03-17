@@ -138,7 +138,7 @@ function updateJSON(file, data) {
 function writeJSON(json, file) {
 
     fs.writeFileSync(file, JSON.stringify(json, null, 2) + '\n');
-    console.log('writing ' + file);
+    console.log('Writing ' + file);
 }
 
 readJSON();
