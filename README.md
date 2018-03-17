@@ -1,6 +1,10 @@
-# MDN Browser Compat Data update tools
+# MDN Browser Compat Data - tool for mapping browser data
 
-Tools to hopefully make it easier to update [MDN browser-compat-data](https://github.com/mdn/browser-compat-data).
+A script to hopefully make it easier to update [MDN browser-compat-data](https://github.com/mdn/browser-compat-data).
+
+It uses a defined `source` browser and version mapping, to update the supported version data for another browser, where that data is currently missing.
+
+It updates the JSON files directly. It takes a path which contains Browser Compat Data JSON files, so you could apply it to the whole repo, or a subpath.
 
 ## map-browser-data
 

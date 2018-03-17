@@ -1,21 +1,21 @@
 {
   "name": "mdn-bcd-map-browser-data",
   "version": "0.1.0",
-  "description": "MDN Browser Compat Data Update Tools",
+  "description": "MDN Browser Compat Data script for mapping browser data",
   "main": "map-browser-data.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/poshaughnessy/mdn-browser-compat-data-update-tools.git"
+    "url": "git+https://github.com/poshaughnessy/mdn-bcd-map-browser-data.git"
   },
   "author": "Peter O'Shaughnessy <peter.oshaughnessy@gmail.com> (https://peteroshaughnessy.com)",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/poshaughnessy/mdn-browser-compat-data-update-tools/issues"
+    "url": "https://github.com/poshaughnessy/mdn-bcd-map-browser-data/issues"
   },
-  "homepage": "https://github.com/poshaughnessy/mdn-browser-compat-data-update-tools#readme",
+  "homepage": "https://github.com/poshaughnessy/mdn-bcd-map-browser-data#readme",
   "dependencies": {
     "colors": "^1.2.1",
     "debug": "^3.1.0",
