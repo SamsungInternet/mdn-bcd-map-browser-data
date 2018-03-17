@@ -108,9 +108,9 @@ function updateJSON(file, data) {
                     || [false, false]
                 )[1];
 
+                // If support info doesn't exist for Samsung Internet, or is
+                // false or null, then continue...
                 if (!destSupportNode || !destSupportNode['version_added']) {
-
-                    // Source browser exists but not dest browser
 
                     console.log(colors.data(`- Mapped source ${sourceVersion} to ${mappedVersion}`));
 
