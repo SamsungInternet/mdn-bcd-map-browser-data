@@ -43,7 +43,7 @@ const browserVersionMapping = new Map([
 
 function readJSON() {
 
-    glob(path.join(inputFilePath, '**/*.json'), {ignore: 'node_modules'}, (error, files) => {
+    glob(path.join(inputFilePath, (inputFilePath.match(/\.json$/) ? '' : '**/*.json')), {ignore: 'node_modules'}, (error, files) => {
 
         if (error) {
             throw error;
@@ -95,7 +95,7 @@ function updateJSON(file, data) {
         
         for (supportNode of supportNodes) {
 
-            const sourceSupportNode = supportNode[sourceBrowserId];
+            let sourceSupportNode = supportNode[sourceBrowserId];
             const chromeSupportNode = supportNode[chromeDesktopBrowserId];
 
             // Get existing object or make a new one if one is not already present
@@ -114,32 +114,73 @@ function updateJSON(file, data) {
                     if (Array.isArray(destSupportNode)) continue;
 
                     supportNode[destBrowserId] = {version_added: null};
+
+                    const firstDatumKeys = Object.keys(sourceSupportNode[0]).sort();
+
+                    // If all the data is the same ensure it is sorted by version added.
+                    if (sourceSupportNode.every(node => {
+                        const keys = Object.keys(node).sort();
+
+                        // Make sure the keys are the same
+                        return keys.length === firstDatumKeys.length &&
+                            (keys.filter((key, i) => key !== firstDatumKeys[i]).length === 0)
+                    })) {
+                        // All of the arrays have the same keys
+                        sourceSupportNode = sourceSupportNode
+                        .slice()
+                        .sort((a,b) => {
+                                const aVal = parseInt(a.version_added) || Infinity; // true, false, null should be weighted 
+                                const bVal = parseInt(b.version_added) || Infinity; // true, false, null should be weighted 
+                                return aVal - bVal; 
+                        });
+                    }
                     
-                    console.log(sourceSupportNode);
-                    const outData = sourceSupportNode.map(i => {
-
-                        // Assume no flags in Samsung Internet
-                        if (i.flags) return {
-                            version_added: false
-                        };
-
+                    const outData = sourceSupportNode
+                    .filter(i => !(i.flags || i.alternative_name))
+                    .map(i => {
                         const out = Object.assign({}, i);
                         delete out.version_added;
                         mapSupport(i, out, null);
                         return out;
+
+                    }).filter((el, i) => {
+                        // filter out any objects with a falsy version_added (aside from the first)
+                        if (i === 0) return true;
+                        if (!el.version_added) return false;
+
+                        // Filter out situations where the chrome_data is bad i.e.
+                        /*
+                            [{
+                                "version_added": "4.0"
+                            },
+                            {
+                                "version_added": true
+                            }]
+                        */
+                        const keys = Object.keys(el);
+                        if (keys.length === 1 && keys[0] === 'version_added') {
+                            return false;
+                        }
+                        return true;
                     });
 
                     if (!!outData[0].version_added) {
-                        supportNode[destBrowserId] = outData.filter(i => !!i.version_added);
+                        if (outData.length === 1 && Object.keys(outData[0]).length) {
+                            supportNode[destBrowserId] = outData[0];
+                        } else if (Object.keys(outData).length) {
+                            supportNode[destBrowserId] = outData;
+                        }
                     } else {
                         supportNode[destBrowserId] = {version_added: false};
                     }
                     hasUpdates = true;
-                    console.log(supportNode[destBrowserId]);
 
                 } else {
-                    hasUpdates = mapSupport(sourceSupportNode, destSupportNode, chromeSupportNode);
+                    hasUpdates = hasUpdates || mapSupport(sourceSupportNode, destSupportNode, chromeSupportNode);
                 }
+            }
+            if (Object.keys(supportNode[destBrowserId]).length === 0) {
+                delete supportNode[destBrowserId];
             }
         }
         
@@ -151,25 +192,30 @@ function updateJSON(file, data) {
     
 }
 
-// In progress - broken...
-function mapSupport(sourceSupportNode, destSupportNode, chromeSupportNode) {
-
-    const sourceVersion = sourceSupportNode['version_added'];
+function chromeVersionToSamsung(chromeVer) {
 
     // Maps false to false and null to null.
     // Otherwise, maps version using our mapping definition.
     // If version mapping not found, default to false.
-    const mappedVersion = sourceVersion && (
+    return chromeVer && (
         Array.from(browserVersionMapping.entries())
-        .find(a => (sourceVersion >= a[0][0] && sourceVersion <= a[0][1]))
+        .find(a => (chromeVer >= a[0][0] && chromeVer <= a[0][1]))
         || [false, false]
     )[1];
+}
+
+// In progress - broken...
+function mapSupport(sourceSupportNode, destSupportNode, chromeSupportNode) {
+
+    const sourceVersionAdded = sourceSupportNode['version_added'];
+    const sourceVersionRemoved = sourceSupportNode['version_removed'];
+    const versionAdded = chromeVersionToSamsung(sourceVersionAdded);
 
     // If support info doesn't exist for Samsung Internet, or is
     // false or null, then continue...
     if (!destSupportNode['version_added']) {
 
-        if (mappedVersion === null && chromeSupportNode &&
+        if (versionAdded === null && chromeSupportNode &&
             chromeSupportNode['version_added'] === false) {
 
             // If Chrome desktop version is false, if so,
@@ -180,8 +226,20 @@ function mapSupport(sourceSupportNode, destSupportNode, chromeSupportNode) {
             
         } else {
 
-            console.log(colors.data(`- Mapped source ${sourceVersion} to ${mappedVersion}`));
-            destSupportNode['version_added'] = mappedVersion;
+            console.log(colors.data(`- Mapped source ${sourceVersionAdded} to ${versionAdded}`));
+            destSupportNode['version_added'] = versionAdded;
+
+            if (sourceVersionRemoved) {
+                const samsungVersionRemoved = chromeVersionToSamsung(sourceVersionRemoved);
+                if (samsungVersionRemoved) {
+                    destSupportNode['version_removed'] = samsungVersionRemoved;
+
+                    // Remove the flag if it is added and removed in the same 'version'
+                    if (destSupportNode.version_removed === destSupportNode.version_added) {
+                        destSupportNode.version_added = false;
+                    }
+                }
+            }
         }
 
         // needs update so return true
