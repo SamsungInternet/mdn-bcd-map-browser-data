@@ -96,8 +96,12 @@ function updateJSON(file, data) {
         for (supportNode of supportNodes) {
 
             const sourceSupportNode = supportNode[sourceBrowserId];
-            const destSupportNode = supportNode[destBrowserId];
-        
+            const chromeSupportNode = supportNode[chromeDesktopBrowserId];
+
+            // Get existing object or make a new one if one is not already present
+            const destSupportNode = supportNode[destBrowserId] || {};
+            supportNode[destBrowserId] = destSupportNode;
+
             if (sourceSupportNode) {
 
                 // Sometimes the browser support node contains an array
@@ -106,20 +110,37 @@ function updateJSON(file, data) {
 
                 if (Array.isArray(sourceSupportNode)) {
 
-                    console.log(colors.info('- Copying array of support data'));
+                    // If it is already populated ignore it.
+                    if (Array.isArray(destSupportNode)) continue;
 
-                    supportNode[destBrowserId] = sourceSupportNode.slice();
+                    supportNode[destBrowserId] = {version_added: null};
+                    
+                    console.log(sourceSupportNode);
+                    const outData = sourceSupportNode.map(i => {
 
-                    for (const i=0; i < sourceSupportNode.length; i++) {
-                        mapSupport(sourceSupportNode[i], supportNode[destBrowserId][i]);
+                        // Assume no flags in Samsung Internet
+                        if (i.flags) return {
+                            version_added: false
+                        };
+
+                        const out = Object.assign({}, i);
+                        delete out.version_added;
+                        mapSupport(i, out, null);
+                        return out;
+                    });
+
+                    if (!!outData[0].version_added) {
+                        supportNode[destBrowserId] = outData.filter(i => !!i.version_added);
+                    } else {
+                        supportNode[destBrowserId] = {version_added: false};
                     }
+                    hasUpdates = true;
+                    console.log(supportNode[destBrowserId]);
 
                 } else {
-                    //mapSupport...
+                    hasUpdates = mapSupport(sourceSupportNode, destSupportNode, chromeSupportNode);
                 }
-
             }
-
         }
         
     }
@@ -131,48 +152,41 @@ function updateJSON(file, data) {
 }
 
 // In progress - broken...
-function mapSupport(sourceSupportNode, destSupportNode) {
+function mapSupport(sourceSupportNode, destSupportNode, chromeSupportNode) {
 
-                const sourceVersion = sourceSupportNode['version_added'];
+    const sourceVersion = sourceSupportNode['version_added'];
 
-                // Maps false to false and null to null.
-                // Otherwise, maps version using our mapping definition.
-                // If version mapping not found, default to false.
-                const mappedVersion = sourceVersion && (
-                    Array.from(browserVersionMapping.entries())
-                    .find(a => (sourceVersion >= a[0][0] && sourceVersion <= a[0][1]))
-                    || [false, false]
-                )[1];
+    // Maps false to false and null to null.
+    // Otherwise, maps version using our mapping definition.
+    // If version mapping not found, default to false.
+    const mappedVersion = sourceVersion && (
+        Array.from(browserVersionMapping.entries())
+        .find(a => (sourceVersion >= a[0][0] && sourceVersion <= a[0][1]))
+        || [false, false]
+    )[1];
 
-                // If support info doesn't exist for Samsung Internet, or is
-                // false or null, then continue...
-                if (!destSupportNode || !destSupportNode['version_added']) {
+    // If support info doesn't exist for Samsung Internet, or is
+    // false or null, then continue...
+    if (!destSupportNode['version_added']) {
 
-                    if (mappedVersion === null && 
-                        supportNode[chromeDesktopBrowserId]['version_added'] === false) {
+        if (mappedVersion === null && chromeSupportNode &&
+            chromeSupportNode['version_added'] === false) {
 
-                        // If Chrome desktop version is false, if so,
-                        // we presume false too. (Erring on side of reducing nulls)
-                        
-                        console.log(colors.info('- Replacing null with false'));
-                        supportNode[destBrowserId] = {
-                            'version_added': false
-                        };                        
-                        
-                    } else {
-    
-                        console.log(colors.data(`- Mapped source ${sourceVersion} to ${mappedVersion}`));
+            // If Chrome desktop version is false, if so,
+            // we presume false too. (Erring on side of reducing nulls)
+            
+            console.log(colors.info('- Replacing null with false'));
+            destSupportNode['version_added'] = false;         
+            
+        } else {
 
-                        supportNode[destBrowserId] = {
-                            'version_added': mappedVersion
-                        };
-                                
-                    }
-    
-                    hasUpdates = true;
-                }
+            console.log(colors.data(`- Mapped source ${sourceVersion} to ${mappedVersion}`));
+            destSupportNode['version_added'] = mappedVersion;
+        }
 
-
+        // needs update so return true
+        return true;
+    }
 }
 
 function writeJSON(json, file) {
