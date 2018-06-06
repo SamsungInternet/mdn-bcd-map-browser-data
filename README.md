@@ -24,7 +24,7 @@ node map-browser-data .
 node map-browser-data ../bcd/javascript/
 ```
 
-To debug, set the DEBUG environment variable with the namespace '':
+To debug, set the DEBUG environment variable with the namespace 'map-browser-data':
 
 ```
 DEBUG=map-browser-data node map-browser-data.js [path]
